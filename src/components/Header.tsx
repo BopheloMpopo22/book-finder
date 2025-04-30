@@ -1,0 +1,87 @@
+import {
+  Box,
+  Input,
+  VStack,
+  Heading,
+  Text,
+  Button,
+  InputGroup,
+  InputRightElement,
+  Icon,
+} from "@chakra-ui/react";
+import { SearchIcon } from "@chakra-ui/icons";
+import { useState } from "react";
+
+interface HeaderProps {
+  onSearch: (query: string) => void;
+  isLoading: boolean;
+}
+
+const Header = ({ onSearch, isLoading }: HeaderProps) => {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = () => {
+    onSearch(searchQuery);
+  };
+
+  return (
+    <Box textAlign="center" py={8}>
+      <Heading size="xl" mb={6}>
+        Book Finder
+      </Heading>
+      <Box w="full" maxW="900px" mx="auto">
+        <InputGroup size="lg">
+          <Input
+            placeholder="Search for your favorite books or search for new books to fill the bookshelf"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+            bg="white"
+            borderColor="gray.300"
+            _hover={{ borderColor: "gray.400" }}
+            _focus={{
+              borderColor: "blue.500",
+              boxShadow: "0 0 0 1px blue.500",
+            }}
+            h="60px"
+            fontSize="lg"
+          />
+          <InputRightElement h="60px">
+            <Button
+              colorScheme="blue"
+              onClick={handleSearch}
+              isLoading={isLoading}
+              h="50px"
+              w="50px"
+              p={0}
+              borderRadius="full"
+            >
+              <SearchIcon boxSize={5} />
+            </Button>
+          </InputRightElement>
+        </InputGroup>
+      </Box>
+      <Box mt={8} maxW="800px" mx="auto" textAlign="left">
+        <VStack spacing={2} align="start">
+          <Text fontWeight="bold" fontSize="lg">
+            Search for your favorite books
+          </Text>
+          <Text fontWeight="bold" fontSize="lg">
+            Forgot your favorite books, write what you remember of the plot,
+            book finder will find it for you.
+          </Text>
+          <Text fontWeight="bold" fontSize="lg">
+            Search for similar stories to the one you just read, just write any
+            category of book you want.
+          </Text>
+          <Text fontWeight="bold" fontSize="lg">
+            e.g. friends to lovers, action with romance, horror books with a
+            good ending.
+          </Text>
+        </VStack>
+      </Box>
+    </Box>
+  );
+};
+
+export default Header;

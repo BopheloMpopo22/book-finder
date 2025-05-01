@@ -4,7 +4,7 @@ import Header from "./components/Header";
 import Navigation from "./components/Navigation";
 import SearchResults from "./components/SearchResults";
 import LatestReleases from "./components/LatestReleases";
-import { searchBooks, Book } from "./services/bookService";
+import { searchBooksByTitle, Book } from "./services/bookService";
 
 function App() {
   const [searchResults, setSearchResults] = useState<Book[]>([]);
@@ -15,7 +15,7 @@ function App() {
 
     setIsLoading(true);
     try {
-      const results = await searchBooks(query);
+      const results = await searchBooksByTitle(query);
       setSearchResults(results);
     } catch (error) {
       console.error("Error searching books:", error);

@@ -10,6 +10,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { Book } from "../services/bookService";
+import { ExternalLinkIcon } from "@chakra-ui/icons";
 
 interface BookCardProps {
   book: Book;
@@ -135,8 +136,13 @@ const BookCard = ({
             rel="noopener noreferrer"
             _hover={{ textDecoration: "none" }}
           >
-            <Button colorScheme={buttonColorScheme} mt={2} w="full">
-              {buttonText}
+            <Button
+              colorScheme="orange"
+              size="md"
+              width="100%"
+              rightIcon={<ExternalLinkIcon />}
+            >
+              Buy on Amazon
             </Button>
           </Link>
         ) : (

@@ -4,6 +4,8 @@ const AMAZON_SECRET_KEY = import.meta.env.VITE_AMAZON_SECRET_KEY;
 const AMAZON_ASSOCIATE_TAG = import.meta.env.VITE_AMAZON_ASSOCIATE_TAG;
 const GOOGLE_BOOKS_API_KEY = "AIzaSyCkzADtrUlngGfuUoTOpcIuqy7xly18kgI";
 
+import { searchBooks } from "./amazonService";
+
 export interface Book {
   id: string;
   title: string;
@@ -11,7 +13,7 @@ export interface Book {
   description: string;
   imageUrl: string;
   amazonUrl: string;
-  price?: string;
+  price: string;
   categories?: string[];
   publishedDate?: string;
   pageCount?: number;
@@ -117,107 +119,24 @@ const TROPE_KEYWORDS = {
   "parallel worlds": "parallel worlds alternate reality",
 };
 
-export const searchBooks = async (query: string): Promise<Book[]> => {
+export const searchBooksByTitle = async (query: string): Promise<Book[]> => {
   try {
-    let enhancedQuery = query;
-    let sortByDate = true;
+    console.log("Enhanced Search Query:", query);
+    const books = await searchBooks({ keywords: query });
+    console.log("Amazon API Response:", books);
 
-    // Check if query is looking for a specific author
-    if (
-      query.toLowerCase().includes("by ") ||
-      query.toLowerCase().includes("author:")
-    ) {
-      const authorMatch = query.match(/(?:by |author:)([^"]+)/i);
-      if (authorMatch) {
-        const author = authorMatch[1].trim();
-        enhancedQuery = `inauthor:${encodeURIComponent(author)}`;
-        sortByDate = true;
-      }
-    }
-
-    // If query contains "similar to" or "like", search for books with similar themes
-    if (
-      query.toLowerCase().includes("similar to") ||
-      query.toLowerCase().includes("like")
-    ) {
-      const bookTitle = query.split(/similar to|like/i)[1]?.trim();
-      if (bookTitle) {
-        const bookResponse = await fetch(
-          `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(
-            bookTitle
-          )}&key=${GOOGLE_BOOKS_API_KEY}`
-        );
-        const bookData = await bookResponse.json();
-
-        if (bookData.items?.[0]) {
-          const book = bookData.items[0];
-          const categories = book.volumeInfo.categories || [];
-          const description = book.volumeInfo.description || "";
-          const keyTerms = description.split(/[.,!?]/)[0];
-          enhancedQuery = `${categories.join(" ")} ${keyTerms}`;
-        }
-      }
-    }
-
-    // Check for trope keywords
-    for (const [trope, searchTerms] of Object.entries(TROPE_KEYWORDS)) {
-      if (query.toLowerCase().includes(trope)) {
-        enhancedQuery = `${searchTerms} ${query}`;
-        break;
-      }
-    }
-
-    // Add sorting by date if needed
-    const searchUrl = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(
-      enhancedQuery
-    )}&key=${GOOGLE_BOOKS_API_KEY}&maxResults=40${
-      sortByDate ? "&orderBy=relevance" : ""
-    }`;
-
-    const googleBooksResponse = await fetch(searchUrl);
-    const googleBooksData = await googleBooksResponse.json();
-
-    console.log("Enhanced Search Query:", enhancedQuery);
-    console.log("Google Books API Response:", googleBooksData);
-
-    if (!googleBooksData.items) {
-      console.log("No books found in the response");
-      return [];
-    }
-
-    let books = googleBooksData.items.map((item: any) => {
-      const book = {
-        id: item.id,
-        title: item.volumeInfo.title,
-        authors: item.volumeInfo.authors || [],
-        description: item.volumeInfo.description || "",
-        imageUrl:
-          item.volumeInfo.imageLinks?.thumbnail ||
-          "https://via.placeholder.com/150",
-        amazonUrl: "", // This will be populated with Amazon affiliate link
-        price: item.saleInfo?.listPrice?.amount || "",
-        categories: item.volumeInfo.categories || [],
-        publishedDate: item.volumeInfo.publishedDate,
-        pageCount: item.volumeInfo.pageCount,
-        language: item.volumeInfo.language,
-        publisher: item.volumeInfo.publisher,
-        averageRating: item.volumeInfo.averageRating,
-        ratingsCount: item.volumeInfo.ratingsCount,
-      };
-      console.log("Processed book:", book);
-      return book;
-    });
-
-    // Sort by date if needed
-    if (sortByDate) {
-      books.sort((a: Book, b: Book) => {
-        const dateA = a.publishedDate ? new Date(a.publishedDate) : new Date(0);
-        const dateB = b.publishedDate ? new Date(b.publishedDate) : new Date(0);
-        return dateB.getTime() - dateA.getTime();
-      });
-    }
-
-    return books;
+    return books.map((book: { author: string; title: string }) => ({
+      ...book,
+      authors: [book.author],
+      description: book.title,
+      categories: [],
+      publishedDate: "",
+      pageCount: 0,
+      language: "en",
+      publisher: "Amazon",
+      averageRating: 0,
+      ratingsCount: 0,
+    }));
   } catch (error) {
     console.error("Error searching books:", error);
     return [];

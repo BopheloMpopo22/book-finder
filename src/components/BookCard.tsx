@@ -135,6 +135,13 @@ const BookCard = ({
             target="_blank"
             rel="noopener noreferrer"
             _hover={{ textDecoration: "none" }}
+            onClick={(e) => {
+              console.log("Amazon URL:", amazonUrl); // Debug log
+              if (!amazonUrl) {
+                e.preventDefault();
+                console.error("Amazon URL is missing");
+              }
+            }}
           >
             <Button
               colorScheme="orange"
@@ -146,8 +153,8 @@ const BookCard = ({
             </Button>
           </Link>
         ) : (
-          <Button colorScheme={buttonColorScheme} mt={2} w="full">
-            {buttonText}
+          <Button colorScheme={buttonColorScheme} mt={2} w="full" isDisabled>
+            Link Not Available
           </Button>
         )}
       </VStack>

@@ -89,7 +89,7 @@ export const searchBooks = async ({
       price:
         item.Offers?.Listings?.[0]?.Price?.DisplayAmount ||
         "Price not available",
-      amazonUrl: `https://www.amazon.com/dp/${item.ASIN}/?tag=${AMAZON_ASSOCIATE_TAG}`,
+      amazonUrl: `https://www.amazon.com/dp/${item.ASIN}/?tag=${AMAZON_ASSOCIATE_TAG}&linkCode=as2&camp=1789&creative=9325`,
     }));
   } catch (error) {
     console.error("Error searching books:", error);

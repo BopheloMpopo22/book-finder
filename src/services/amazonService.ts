@@ -1,5 +1,4 @@
-import axios from "axios";
-import crypto from "crypto";
+import CryptoJS from "crypto-js";
 
 const AMAZON_ACCESS_KEY = process.env.REACT_APP_AMAZON_ACCESS_KEY || "";
 const AMAZON_SECRET_KEY = process.env.REACT_APP_AMAZON_SECRET_KEY || "";
@@ -14,79 +13,57 @@ interface BookSearchParams {
   itemCount?: number;
 }
 
+const generateAmazonSignature = (queryParams: string): string => {
+  const stringToSign = `GET\n${AMAZON_HOST}\n${AMAZON_PATH}\n${queryParams}`;
+  const hmac = CryptoJS.HmacSHA256(stringToSign, AMAZON_SECRET_KEY);
+  return CryptoJS.enc.Base64.stringify(hmac);
+};
+
 export const searchBooks = async ({
   keywords,
   searchIndex = "Books",
   itemCount = 10,
 }: BookSearchParams) => {
-  const payload = {
+  const timestamp = new Date().toISOString();
+  const params = new URLSearchParams({
     Keywords: keywords,
-    Resources: [
-      "Images.Primary.Medium",
-      "ItemInfo.Title",
-      "ItemInfo.ByLineInfo",
-      "ItemInfo.ContentInfo",
-      "ItemInfo.ProductInfo",
-      "Offers.Listings.Price",
-    ],
     PartnerTag: AMAZON_ASSOCIATE_TAG,
     PartnerType: "Associates",
     Marketplace: "www.amazon.com",
+    Operation: "SearchItems",
     SearchIndex: searchIndex,
-    ItemCount: itemCount,
-  };
+    Timestamp: timestamp,
+    AWSAccessKeyId: AMAZON_ACCESS_KEY,
+    AssociateTag: AMAZON_ASSOCIATE_TAG,
+  });
 
-  const timestamp = new Date().toISOString();
-  const canonicalRequest = `POST\n${AMAZON_PATH}\n\ncontent-encoding:amz-1.0\ncontent-type:application/json; charset=utf-8\nhost:${AMAZON_HOST}\nx-amz-date:${timestamp}\nx-amz-target:com.amazon.paapi5.v1.ProductAdvertisingAPIv1.SearchItems\n\ncontent-encoding;content-type;host;x-amz-date;x-amz-target\n${crypto
-    .createHash("sha256")
-    .update(JSON.stringify(payload))
-    .digest("hex")}`;
+  const signature = generateAmazonSignature(params.toString());
+  params.append("Signature", signature);
 
-  const stringToSign = `AWS4-HMAC-SHA256\n${timestamp}\n${timestamp.substring(
-    0,
-    8
-  )}/${AMAZON_REGION}/ProductAdvertisingAPI/aws4_request\n${crypto
-    .createHash("sha256")
-    .update(canonicalRequest)
-    .digest("hex")}`;
-
-  const signingKey = getSignatureKey(
-    AMAZON_SECRET_KEY,
-    timestamp.substring(0, 8),
-    AMAZON_REGION,
-    "ProductAdvertisingAPI"
-  );
-  const signature = crypto
-    .createHmac("sha256", signingKey)
-    .update(stringToSign)
-    .digest("hex");
-
-  const headers = {
-    "Content-Encoding": "amz-1.0",
-    "Content-Type": "application/json; charset=utf-8",
-    Host: AMAZON_HOST,
-    "X-Amz-Date": timestamp,
-    "X-Amz-Target": "com.amazon.paapi5.v1.ProductAdvertisingAPIv1.SearchItems",
-    Authorization: `AWS4-HMAC-SHA256 Credential=${AMAZON_ACCESS_KEY}/${timestamp.substring(
-      0,
-      8
-    )}/${AMAZON_REGION}/ProductAdvertisingAPI/aws4_request, SignedHeaders=content-encoding;content-type;host;x-amz-date;x-amz-target, Signature=${signature}`,
-  };
+  const url = `https://${AMAZON_HOST}${AMAZON_PATH}?${params.toString()}`;
 
   try {
-    const response = await axios.post(
-      `https://${AMAZON_HOST}${AMAZON_PATH}`,
-      payload,
-      { headers }
-    );
-    console.log("Amazon API Response:", response.data); // Debug log
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
 
-    if (!response.data.SearchResult?.Items) {
-      console.error("No items found in response:", response.data);
+    if (!response.ok) {
+      throw new Error(`Amazon API error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log("Amazon API Response:", data); // Debug log
+
+    if (!data.SearchResult?.Items) {
+      console.error("No items found in response:", data);
       return [];
     }
 
-    const items = response.data.SearchResult.Items.map((item: any) => {
+    const items = data.SearchResult.Items.map((item: any) => {
       const amazonUrl = `https://www.amazon.com/dp/${item.ASIN}/?tag=${AMAZON_ASSOCIATE_TAG}&linkCode=as2&camp=1789&creative=9325`;
       console.log("Generated Amazon URL:", amazonUrl); // Debug log
 
@@ -120,17 +97,8 @@ function getSignatureKey(
   regionName: string,
   serviceName: string
 ) {
-  const kDate = crypto
-    .createHmac("sha256", "AWS4" + key)
-    .update(dateStamp)
-    .digest();
-  const kRegion = crypto
-    .createHmac("sha256", kDate)
-    .update(regionName)
-    .digest();
-  const kService = crypto
-    .createHmac("sha256", kRegion)
-    .update(serviceName)
-    .digest();
-  return crypto.createHmac("sha256", kService).update("aws4_request").digest();
+  const kDate = CryptoJS.HmacSHA256(dateStamp, "AWS4" + key);
+  const kRegion = CryptoJS.HmacSHA256(regionName, kDate);
+  const kService = CryptoJS.HmacSHA256(serviceName, kRegion);
+  return CryptoJS.HmacSHA256("aws4_request", kService);
 }

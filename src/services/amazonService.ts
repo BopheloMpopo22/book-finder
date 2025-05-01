@@ -24,39 +24,17 @@ export const searchBooks = async ({
   searchIndex = "Books",
   itemCount = 10,
 }: BookSearchParams) => {
-  const timestamp = new Date().toISOString();
-  const params = new URLSearchParams({
-    Keywords: keywords,
-    PartnerTag: AMAZON_ASSOCIATE_TAG,
-    PartnerType: "Associates",
-    Marketplace: "www.amazon.com",
-    Operation: "SearchItems",
-    SearchIndex: searchIndex,
-    Timestamp: timestamp,
-    AWSAccessKeyId: AMAZON_ACCESS_KEY,
-    AssociateTag: AMAZON_ASSOCIATE_TAG,
-  });
-
-  const signature = generateAmazonSignature(params.toString());
-  params.append("Signature", signature);
-
-  const url = `https://${AMAZON_HOST}${AMAZON_PATH}?${params.toString()}`;
-
   try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
+    const response = await fetch(
+      `/api/search?query=${encodeURIComponent(keywords)}`
+    );
 
     if (!response.ok) {
-      throw new Error(`Amazon API error: ${response.statusText}`);
+      throw new Error(`API error: ${response.statusText}`);
     }
 
     const data = await response.json();
-    console.log("Amazon API Response:", data); // Debug log
+    console.log("Amazon API Response:", data);
 
     if (!data.SearchResult?.Items) {
       console.error("No items found in response:", data);
@@ -64,8 +42,8 @@ export const searchBooks = async ({
     }
 
     const items = data.SearchResult.Items.map((item: any) => {
-      const amazonUrl = `https://www.amazon.com/dp/${item.ASIN}/?tag=${AMAZON_ASSOCIATE_TAG}&linkCode=as2&camp=1789&creative=9325`;
-      console.log("Generated Amazon URL:", amazonUrl); // Debug log
+      const amazonUrl = `https://www.amazon.com/dp/${item.ASIN}/?tag=${process.env.REACT_APP_AMAZON_ASSOCIATE_TAG}&linkCode=as2&camp=1789&creative=9325`;
+      console.log("Generated Amazon URL:", amazonUrl);
 
       return {
         id: item.ASIN,
@@ -82,11 +60,8 @@ export const searchBooks = async ({
     });
 
     return items;
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error searching books:", error);
-    if (error.response) {
-      console.error("Error response data:", error.response.data);
-    }
     throw error;
   }
 };

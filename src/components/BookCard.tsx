@@ -42,6 +42,8 @@ const BookCard = ({
     ratingsCount,
   } = book;
 
+  console.log("BookCard received amazonUrl:", amazonUrl); // Debug log
+
   // Format publication date
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return "Release date unknown";

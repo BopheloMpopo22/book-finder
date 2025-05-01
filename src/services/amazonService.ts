@@ -79,20 +79,37 @@ export const searchBooks = async ({
       payload,
       { headers }
     );
-    return response.data.SearchResult.Items.map((item: any) => ({
-      id: item.ASIN,
-      title: item.ItemInfo.Title.DisplayValue,
-      author:
-        item.ItemInfo.ByLineInfo?.Authors?.[0]?.DisplayValue ||
-        "Unknown Author",
-      imageUrl: item.Images.Primary.Medium.URL,
-      price:
-        item.Offers?.Listings?.[0]?.Price?.DisplayAmount ||
-        "Price not available",
-      amazonUrl: `https://www.amazon.com/dp/${item.ASIN}/?tag=${AMAZON_ASSOCIATE_TAG}&linkCode=as2&camp=1789&creative=9325`,
-    }));
-  } catch (error) {
+    console.log("Amazon API Response:", response.data); // Debug log
+
+    if (!response.data.SearchResult?.Items) {
+      console.error("No items found in response:", response.data);
+      return [];
+    }
+
+    const items = response.data.SearchResult.Items.map((item: any) => {
+      const amazonUrl = `https://www.amazon.com/dp/${item.ASIN}/?tag=${AMAZON_ASSOCIATE_TAG}&linkCode=as2&camp=1789&creative=9325`;
+      console.log("Generated Amazon URL:", amazonUrl); // Debug log
+
+      return {
+        id: item.ASIN,
+        title: item.ItemInfo.Title.DisplayValue,
+        author:
+          item.ItemInfo.ByLineInfo?.Authors?.[0]?.DisplayValue ||
+          "Unknown Author",
+        imageUrl: item.Images.Primary.Medium.URL,
+        price:
+          item.Offers?.Listings?.[0]?.Price?.DisplayAmount ||
+          "Price not available",
+        amazonUrl,
+      };
+    });
+
+    return items;
+  } catch (error: any) {
     console.error("Error searching books:", error);
+    if (error.response) {
+      console.error("Error response data:", error.response.data);
+    }
     throw error;
   }
 };

@@ -6,6 +6,8 @@ const AMAZON_ASSOCIATE_TAG = process.env.REACT_APP_AMAZON_ASSOCIATE_TAG || "";
 const AMAZON_REGION = "us-east-1";
 const AMAZON_HOST = "webservices.amazon.com";
 const AMAZON_PATH = "/paapi5/searchitems";
+const CORS_PROXY = "https://cors-anywhere.herokuapp.com/";
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
 
 interface BookSearchParams {
   keywords: string;
@@ -26,7 +28,7 @@ export const searchBooks = async ({
 }: BookSearchParams) => {
   try {
     const response = await fetch(
-      `/api/search?query=${encodeURIComponent(keywords)}`
+      `${API_URL}/api/search?query=${encodeURIComponent(keywords)}`
     );
 
     if (!response.ok) {

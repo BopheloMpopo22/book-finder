@@ -13,12 +13,25 @@ export const searchBooks = async ({
   itemCount = 10,
 }: BookSearchParams) => {
   try {
-    const response = await fetch(
+    console.log(
+      "Making API request to:",
       `${API_URL}/api/search?query=${encodeURIComponent(keywords)}`
+    );
+    const response = await fetch(
+      `${API_URL}/api/search?query=${encodeURIComponent(keywords)}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      }
     );
 
     if (!response.ok) {
-      throw new Error(`API error: ${response.statusText}`);
+      const errorData = await response.json().catch(() => ({}));
+      console.error("API Error Response:", errorData);
+      throw new Error(`API error: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();

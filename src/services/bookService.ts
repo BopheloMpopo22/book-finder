@@ -127,6 +127,11 @@ export const searchBooksByTitle = async (query: string): Promise<Book[]> => {
     const books = await searchBooks({ keywords: enhancedQuery });
     console.log("Amazon API Response:", books);
 
+    if (!books || books.length === 0) {
+      console.log("No books found, returning empty array");
+      return [];
+    }
+
     return books.map((book: { author: string; title: string }) => ({
       ...book,
       authors: [book.author],

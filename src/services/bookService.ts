@@ -18,8 +18,12 @@ export interface Book {
   ratingsCount?: number;
 }
 
+type TropeKeywords = {
+  [key: string]: string;
+};
+
 // Comprehensive trope and genre keywords
-const TROPE_KEYWORDS = {
+const TROPE_KEYWORDS: TropeKeywords = {
   // Romance Tropes
   "friends to lovers": "romance friendship love relationship",
   "enemies to lovers": "romance enemies love relationship",
@@ -116,8 +120,11 @@ const TROPE_KEYWORDS = {
 
 export const searchBooksByTitle = async (query: string): Promise<Book[]> => {
   try {
-    console.log("Enhanced Search Query:", query);
-    const books = await searchBooks({ keywords: query });
+    // Enhance the search query with trope keywords if applicable
+    const enhancedQuery = TROPE_KEYWORDS[query.toLowerCase()] || query;
+    console.log("Enhanced Search Query:", enhancedQuery);
+
+    const books = await searchBooks({ keywords: enhancedQuery });
     console.log("Amazon API Response:", books);
 
     return books.map((book: { author: string; title: string }) => ({

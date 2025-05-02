@@ -16,6 +16,7 @@ export interface Book {
   publisher?: string;
   averageRating?: number;
   ratingsCount?: number;
+  previewLink?: string;
 }
 
 type TropeKeywords = {
@@ -125,17 +126,21 @@ export const searchBooksByTitle = async (query: string): Promise<Book[]> => {
     console.log("Enhanced Search Query:", enhancedQuery);
 
     const books = await searchBooks({ keywords: enhancedQuery });
-    console.log("Amazon API Response:", books);
+    console.log("API Response:", books);
 
     if (!books || books.length === 0) {
       console.log("No books found, returning empty array");
       return [];
     }
 
-    return books.map((book: { author: string; title: string }) => ({
-      ...book,
+    return books.map((book: any) => ({
+      id: book.id,
+      title: book.title,
       authors: [book.author],
-      description: book.title,
+      description: book.description || book.title,
+      imageUrl: book.imageUrl,
+      amazonUrl: book.amazonUrl,
+      price: book.price,
       categories: [],
       publishedDate: "",
       pageCount: 0,
@@ -143,6 +148,7 @@ export const searchBooksByTitle = async (query: string): Promise<Book[]> => {
       publisher: "Amazon",
       averageRating: 0,
       ratingsCount: 0,
+      previewLink: book.previewLink,
     }));
   } catch (error) {
     console.error("Error searching books:", error);

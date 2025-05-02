@@ -1,10 +1,10 @@
 // API Keys should be stored in environment variables
+import { searchBooks } from "./amazonService";
+
 const AMAZON_ACCESS_KEY = process.env.REACT_APP_AMAZON_ACCESS_KEY;
 const AMAZON_SECRET_KEY = process.env.REACT_APP_AMAZON_SECRET_KEY;
 const AMAZON_ASSOCIATE_TAG = process.env.REACT_APP_AMAZON_ASSOCIATE_TAG;
 const GOOGLE_BOOKS_API_KEY = "AIzaSyCkzADtrUlngGfuUoTOpcIuqy7xly18kgI";
-
-import { searchBooks } from "./amazonService";
 
 export interface Book {
   id: string;

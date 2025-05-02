@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Box, Container, VStack, Divider } from "@chakra-ui/react";
+import { Box, Container } from "@chakra-ui/react";
+import { VStack, Divider } from "@chakra-ui/layout";
 import Header from "./components/Header";
 import Navigation from "./components/Navigation";
 import SearchResults from "./components/SearchResults";

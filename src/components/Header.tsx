@@ -6,10 +6,8 @@ import {
   Heading,
   Text,
   Button,
-  InputGroup,
   Spinner,
 } from "@chakra-ui/react";
-import { InputRightElement } from "@chakra-ui/input";
 import { SearchIcon } from "@chakra-ui/icons";
 
 interface HeaderProps {

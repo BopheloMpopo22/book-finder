@@ -7,7 +7,8 @@ const AMAZON_REGION = "us-east-1";
 const AMAZON_HOST = "webservices.amazon.com";
 const AMAZON_PATH = "/paapi5/searchitems";
 const CORS_PROXY = "https://cors-anywhere.herokuapp.com/";
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
+const API_URL =
+  process.env.REACT_APP_API_URL || "https://book-finder-backend.onrender.com";
 
 interface BookSearchParams {
   keywords: string;

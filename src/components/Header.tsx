@@ -19,7 +19,9 @@ const Header = ({ onSearch, isLoading }: HeaderProps) => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = () => {
-    onSearch(searchQuery);
+    if (searchQuery.trim()) {
+      onSearch(searchQuery);
+    }
   };
 
   return (
@@ -44,6 +46,7 @@ const Header = ({ onSearch, isLoading }: HeaderProps) => {
           h="60px"
           fontSize="lg"
           pr="60px"
+          borderRadius="full"
         />
         <Button
           colorScheme="blue"
@@ -55,6 +58,7 @@ const Header = ({ onSearch, isLoading }: HeaderProps) => {
           position="absolute"
           right="5px"
           top="5px"
+          disabled={isLoading}
         >
           {isLoading ? <Spinner size="md" /> : <SearchIcon boxSize={5} />}
         </Button>

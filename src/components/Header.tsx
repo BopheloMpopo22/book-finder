@@ -51,7 +51,7 @@ const Header = ({ onSearch, isLoading }: HeaderProps) => {
             <Button
               colorScheme="blue"
               onClick={handleSearch}
-              isLoading={isLoading}
+              loading={isLoading}
               h="50px"
               w="50px"
               p={0}
@@ -63,7 +63,7 @@ const Header = ({ onSearch, isLoading }: HeaderProps) => {
         </InputGroup>
       </Box>
       <Box mt={8} maxW="800px" mx="auto" textAlign="left">
-        <VStack spacing={2} align="start">
+        <VStack gap={2} align="start">
           <Text fontWeight="bold" fontSize="lg">
             Search for your favorite books
           </Text>

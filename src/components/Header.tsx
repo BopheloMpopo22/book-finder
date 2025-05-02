@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Box,
   Input,
@@ -6,11 +7,10 @@ import {
   Text,
   Button,
   InputGroup,
-  InputRightElement,
-  Icon,
+  Spinner,
 } from "@chakra-ui/react";
+import { InputRightElement } from "@chakra-ui/input";
 import { SearchIcon } from "@chakra-ui/icons";
-import { useState } from "react";
 
 interface HeaderProps {
   onSearch: (query: string) => void;
@@ -32,6 +32,7 @@ const Header = ({ onSearch, isLoading }: HeaderProps) => {
       <Box w="full" maxW="900px" mx="auto">
         <InputGroup size="lg">
           <Input
+            type="text"
             placeholder="Search for your favorite books or search for new books to fill the bookshelf"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

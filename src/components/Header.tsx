@@ -29,38 +29,37 @@ const Header = ({ onSearch, isLoading }: HeaderProps) => {
       <Heading size="xl" mb={6}>
         Book Finder
       </Heading>
-      <Box w="full" maxW="900px" mx="auto">
-        <InputGroup size="lg">
-          <Input
-            type="text"
-            placeholder="Search for your favorite books or search for new books to fill the bookshelf"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-            bg="white"
-            borderColor="gray.300"
-            _hover={{ borderColor: "gray.400" }}
-            _focus={{
-              borderColor: "blue.500",
-              boxShadow: "0 0 0 1px blue.500",
-            }}
-            h="60px"
-            fontSize="lg"
-          />
-          <InputRightElement h="60px">
-            <Button
-              colorScheme="blue"
-              onClick={handleSearch}
-              loading={isLoading}
-              h="50px"
-              w="50px"
-              p={0}
-              borderRadius="full"
-            >
-              <SearchIcon boxSize={5} />
-            </Button>
-          </InputRightElement>
-        </InputGroup>
+      <Box w="full" maxW="900px" mx="auto" position="relative">
+        <Input
+          type="text"
+          placeholder="Search for your favorite books or search for new books to fill the bookshelf"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+          bg="white"
+          borderColor="gray.300"
+          _hover={{ borderColor: "gray.400" }}
+          _focus={{
+            borderColor: "blue.500",
+            boxShadow: "0 0 0 1px blue.500",
+          }}
+          h="60px"
+          fontSize="lg"
+          pr="60px"
+        />
+        <Button
+          colorScheme="blue"
+          onClick={handleSearch}
+          h="50px"
+          w="50px"
+          p={0}
+          borderRadius="full"
+          position="absolute"
+          right="5px"
+          top="5px"
+        >
+          {isLoading ? <Spinner size="md" /> : <SearchIcon boxSize={5} />}
+        </Button>
       </Box>
       <Box mt={8} maxW="800px" mx="auto" textAlign="left">
         <VStack gap={2} align="start">

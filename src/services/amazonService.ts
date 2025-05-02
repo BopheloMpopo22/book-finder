@@ -1,12 +1,8 @@
 import CryptoJS from "crypto-js";
 
-const AMAZON_ACCESS_KEY = process.env.REACT_APP_AMAZON_ACCESS_KEY || "";
 const AMAZON_SECRET_KEY = process.env.REACT_APP_AMAZON_SECRET_KEY || "";
-const AMAZON_ASSOCIATE_TAG = process.env.REACT_APP_AMAZON_ASSOCIATE_TAG || "";
-const AMAZON_REGION = "us-east-1";
 const AMAZON_HOST = "webservices.amazon.com";
 const AMAZON_PATH = "/paapi5/searchitems";
-const CORS_PROXY = "https://cors-anywhere.herokuapp.com/";
 const API_URL =
   process.env.REACT_APP_API_URL || "https://book-finder-backend.onrender.com";
 
@@ -15,12 +11,6 @@ interface BookSearchParams {
   searchIndex?: string;
   itemCount?: number;
 }
-
-const generateAmazonSignature = (queryParams: string): string => {
-  const stringToSign = `GET\n${AMAZON_HOST}\n${AMAZON_PATH}\n${queryParams}`;
-  const hmac = CryptoJS.HmacSHA256(stringToSign, AMAZON_SECRET_KEY);
-  return CryptoJS.enc.Base64.stringify(hmac);
-};
 
 export const searchBooks = async ({
   keywords,

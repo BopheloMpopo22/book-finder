@@ -1,8 +1,3 @@
-import CryptoJS from "crypto-js";
-
-const AMAZON_SECRET_KEY = process.env.REACT_APP_AMAZON_SECRET_KEY || "";
-const AMAZON_HOST = "webservices.amazon.com";
-const AMAZON_PATH = "/paapi5/searchitems";
 const API_URL =
   process.env.REACT_APP_API_URL || "https://book-finder-backend.onrender.com";
 
@@ -58,15 +53,3 @@ export const searchBooks = async ({
     throw error;
   }
 };
-
-function getSignatureKey(
-  key: string,
-  dateStamp: string,
-  regionName: string,
-  serviceName: string
-) {
-  const kDate = CryptoJS.HmacSHA256(dateStamp, "AWS4" + key);
-  const kRegion = CryptoJS.HmacSHA256(regionName, kDate);
-  const kService = CryptoJS.HmacSHA256(serviceName, kRegion);
-  return CryptoJS.HmacSHA256("aws4_request", kService);
-}

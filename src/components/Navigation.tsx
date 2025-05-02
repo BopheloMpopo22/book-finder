@@ -12,7 +12,7 @@ const Navigation = ({ genres, onGenreClick }: NavigationProps) => {
 
   return (
     <Box>
-      <Wrap spacing={4} justify="flex-start">
+      <Wrap gap={4} justify="flex-start">
         {genres.map((genre) => (
           <WrapItem key={genre}>
             <Button

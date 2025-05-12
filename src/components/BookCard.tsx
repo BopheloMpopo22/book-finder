@@ -1,164 +1,138 @@
 import {
   Box,
   Image,
-  Heading,
   Text,
-  Button,
-  Link,
-  Badge,
-  HStack,
   VStack,
+  HStack,
+  Badge,
+  Link,
+  Tooltip,
+  Button,
 } from "@chakra-ui/react";
+import { StarIcon } from "@chakra-ui/icons";
 import { Book } from "../services/bookService";
-import { ExternalLinkIcon } from "@chakra-ui/icons";
 
 interface BookCardProps {
   book: Book;
-  showDescription?: boolean;
-  buttonText?: string;
-  buttonColorScheme?: string;
 }
 
-const BookCard = ({
-  book,
-  showDescription = true,
-  buttonText = "View Details",
-  buttonColorScheme = "blue",
-}: BookCardProps) => {
-  const {
-    id,
-    title,
-    authors,
-    description,
-    imageUrl,
-    amazonUrl,
-    price,
-    categories,
-    publishedDate,
-    pageCount,
-    language,
-    publisher,
-    averageRating,
-    ratingsCount,
-  } = book;
-
-  console.log("BookCard received amazonUrl:", amazonUrl); // Debug log
-
-  // Format publication date
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return "Release date unknown";
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-US", { year: "numeric", month: "long" });
-  };
-
+const BookCard = ({ book }: BookCardProps) => {
   return (
     <Box
-      key={id}
       borderWidth="1px"
       borderRadius="lg"
       overflow="hidden"
-      p={4}
       bg="white"
-      boxShadow="sm"
-      transition="transform 0.2s, box-shadow 0.2s"
-      _hover={{
-        transform: "translateY(-5px)",
-        boxShadow: "md",
-      }}
+      boxShadow="md"
+      transition="transform 0.2s"
+      _hover={{ transform: "scale(1.02)" }}
+      h="100%"
+      display="flex"
+      flexDirection="column"
     >
-      <Image
-        src={imageUrl}
-        alt={title}
-        fallbackSrc="https://via.placeholder.com/150"
-        w="150px"
-        h="225px"
-        objectFit="cover"
-        mx="auto"
-        borderRadius="md"
-      />
-      <VStack mt={4} align="stretch" spacing={2}>
-        <Heading size="md" noOfLines={2}>
-          {title}
-        </Heading>
-        <Text color="gray.600">By {authors.join(", ")}</Text>
+      <Box position="relative" h="300px">
+        <Image
+          src={book.imageUrl}
+          alt={book.title}
+          objectFit="contain"
+          w="100%"
+          h="100%"
+          bg="gray.100"
+          p={2}
+        />
+        {book.averageRating && (
+          <Box
+            position="absolute"
+            top="2"
+            right="2"
+            bg="white"
+            borderRadius="full"
+            p="1"
+            display="flex"
+            alignItems="center"
+          >
+            <StarIcon color="yellow.400" mr="1" />
+            <Text fontSize="sm" fontWeight="bold">
+              {book.averageRating.toFixed(1)}
+            </Text>
+          </Box>
+        )}
+      </Box>
 
-        <HStack spacing={2} wrap="wrap">
-          {categories?.slice(0, 3).map((category) => (
-            <Badge key={category} colorScheme="purple">
-              {category}
-            </Badge>
-          ))}
-        </HStack>
-
-        <Text fontSize="sm" color="gray.500">
-          Published: {formatDate(publishedDate)}
+      <VStack p={4} spacing={3} align="stretch" flex="1">
+        <Text fontSize="xl" fontWeight="bold" noOfLines={2}>
+          {book.title}
+        </Text>
+        <Text color="gray.600" fontSize="md">
+          by {book.author}
         </Text>
 
-        {pageCount && (
-          <Text fontSize="sm" color="gray.500">
-            {pageCount} pages • {language?.toUpperCase()}
-          </Text>
-        )}
-
-        {publisher && (
-          <Text fontSize="sm" color="gray.500">
-            {publisher}
-          </Text>
-        )}
-
-        {averageRating && (
-          <HStack>
-            <Text fontSize="sm" color="gray.500">
-              Rating: {averageRating.toFixed(1)} ⭐
-            </Text>
-            {ratingsCount && (
-              <Text fontSize="sm" color="gray.500">
-                ({ratingsCount.toLocaleString()} ratings)
-              </Text>
-            )}
+        {book.categories && book.categories.length > 0 && (
+          <HStack wrap="wrap" spacing={1}>
+            {book.categories.slice(0, 3).map((category) => (
+              <Badge key={category} colorScheme="purple" variant="subtle">
+                {category}
+              </Badge>
+            ))}
           </HStack>
         )}
 
-        {price && (
-          <Text fontWeight="bold" color="green.600">
-            ${price}
-          </Text>
-        )}
+        <Text fontSize="sm" color="gray.600" noOfLines={3}>
+          {book.description}
+        </Text>
 
-        {showDescription && description && (
-          <Text noOfLines={3} fontSize="sm">
-            {description}
+        <HStack spacing={4} mt="auto" w="100%" justify="space-between">
+          <Text fontWeight="bold" color="blue.600">
+            {book.price}
           </Text>
-        )}
-
-        {amazonUrl ? (
-          <Link
-            href={amazonUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            _hover={{ textDecoration: "none" }}
-            onClick={(e) => {
-              console.log("Amazon URL:", amazonUrl); // Debug log
-              if (!amazonUrl) {
-                e.preventDefault();
-                console.error("Amazon URL is missing");
-              }
-            }}
-          >
-            <Button
-              colorScheme="orange"
-              size="md"
-              width="100%"
-              rightIcon={<ExternalLinkIcon />}
+          {book.previewLink && (
+            <Link
+              href={book.previewLink}
+              isExternal
+              color="blue.500"
+              fontSize="sm"
+              fontWeight="medium"
             >
-              Buy on Amazon
-            </Button>
-          </Link>
-        ) : (
-          <Button colorScheme={buttonColorScheme} mt={2} w="full" isDisabled>
-            Link Not Available
-          </Button>
+              Preview
+            </Link>
+          )}
+        </HStack>
+
+        <HStack spacing={4} fontSize="sm" color="gray.500">
+          {book.publishedDate && (
+            <Text>{new Date(book.publishedDate).getFullYear()}</Text>
+          )}
+          {book.pageCount && <Text>{book.pageCount} pages</Text>}
+          {book.language && <Text>{book.language.toUpperCase()}</Text>}
+        </HStack>
+
+        {book.publisher && (
+          <Text fontSize="sm" color="gray.500">
+            Published by {book.publisher}
+          </Text>
         )}
+
+        <VStack spacing={2} mt="auto">
+          {book.previewLink && (
+            <Link href={book.previewLink} isExternal>
+              <Button
+                size="sm"
+                colorScheme="blue"
+                variant="outline"
+                width="100%"
+              >
+                Preview
+              </Button>
+            </Link>
+          )}
+          {book.amazonLink && (
+            <Link href={book.amazonLink} isExternal>
+              <Button size="sm" colorScheme="orange" width="100%">
+                Buy on Amazon
+              </Button>
+            </Link>
+          )}
+        </VStack>
       </VStack>
     </Box>
   );

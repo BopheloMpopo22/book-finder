@@ -24,6 +24,12 @@ const Header = ({ onSearch, isLoading }: HeaderProps) => {
     }
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
   return (
     <Box textAlign="center" py={8}>
       <Heading size="xl" mb={6}>
@@ -35,7 +41,7 @@ const Header = ({ onSearch, isLoading }: HeaderProps) => {
           placeholder="Search for your favorite books or search for new books to fill the bookshelf"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+          onKeyPress={handleKeyPress}
           bg="white"
           borderColor="gray.300"
           _hover={{ borderColor: "gray.400" }}

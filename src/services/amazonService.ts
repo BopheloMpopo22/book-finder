@@ -1,70 +1,127 @@
-const API_URL =
-  process.env.REACT_APP_API_URL || "https://book-finder-backend.onrender.com";
+// import { HmacSHA256, enc } from "crypto-js";
 
-// Fallback data for when the API is not available
-const FALLBACK_BOOKS = [
-  {
-    ASIN: "B09HZ8Y1ZP",
-    ItemInfo: {
-      Title: { DisplayValue: "The Midnight Library" },
-      ByLineInfo: { Authors: [{ DisplayValue: "Matt Haig" }] },
-    },
-    Images: {
-      Primary: {
-        Medium: {
-          URL: "https://m.media-amazon.com/images/I/81nzxODnaJL._AC_UL320_.jpg",
-        },
-      },
-    },
-    Offers: {
-      Listings: [
-        {
-          Price: { DisplayAmount: "$14.99" },
-        },
-      ],
-    },
-  },
-  {
-    ASIN: "B08G9J44ZN",
-    ItemInfo: {
-      Title: { DisplayValue: "Project Hail Mary" },
-      ByLineInfo: { Authors: [{ DisplayValue: "Andy Weir" }] },
-    },
-    Images: {
-      Primary: {
-        Medium: {
-          URL: "https://m.media-amazon.com/images/I/81nzxODnaJL._AC_UL320_.jpg",
-        },
-      },
-    },
-    Offers: {
-      Listings: [
-        {
-          Price: { DisplayAmount: "$16.99" },
-        },
-      ],
-    },
-  },
-];
+const GOOGLE_BOOKS_API = "https://www.googleapis.com/books/v1/volumes";
 
 interface BookSearchParams {
   keywords: string;
   searchIndex?: string;
   itemCount?: number;
+  startIndex?: number;
 }
+
+interface AmazonSearchParams {
+  keywords: string;
+  searchIndex?: string;
+  itemCount?: number;
+  startIndex?: number;
+}
+
+interface AmazonBook {
+  id: string;
+  title: string;
+  author: string;
+  description: string;
+  imageUrl: string;
+  price: string;
+  amazonLink: string;
+  isbn?: string;
+  publishedDate?: string;
+  pageCount?: number;
+  categories?: string[];
+  language?: string;
+  publisher?: string;
+  averageRating?: number;
+  ratingsCount?: number;
+}
+
+// Fallback data for when the API is not available
+const FALLBACK_BOOKS = [
+  {
+    id: "B09HZ8Y1ZP",
+    volumeInfo: {
+      title: "The Midnight Library",
+      authors: ["Matt Haig"],
+      description: "Between life and death there is a library",
+      imageLinks: {
+        thumbnail:
+          "https://m.media-amazon.com/images/I/81nzxODnaJL._AC_UL320_.jpg",
+      },
+      previewLink:
+        "https://books.google.com/books?id=B09HZ8Y1ZP&printsec=frontcover",
+      publishedDate: "2020-08-13",
+      pageCount: 304,
+      categories: ["Fiction", "Fantasy"],
+      language: "en",
+      publisher: "Canongate Books",
+      averageRating: 4.2,
+      ratingsCount: 15000,
+    },
+    saleInfo: {
+      listPrice: {
+        amount: 14.99,
+        currencyCode: "USD",
+      },
+    },
+  },
+  {
+    id: "B08G9J44ZN",
+    volumeInfo: {
+      title: "Project Hail Mary",
+      authors: ["Andy Weir"],
+      description: "A lone astronaut must save humanity from extinction",
+      imageLinks: {
+        thumbnail:
+          "https://m.media-amazon.com/images/I/81nzxODnaJL._AC_UL320_.jpg",
+      },
+      previewLink:
+        "https://books.google.com/books?id=B08G9J44ZN&printsec=frontcover",
+      publishedDate: "2021-05-04",
+      pageCount: 496,
+      categories: ["Science Fiction", "Space"],
+      language: "en",
+      publisher: "Random House",
+      averageRating: 4.5,
+      ratingsCount: 25000,
+    },
+    saleInfo: {
+      listPrice: {
+        amount: 16.99,
+        currencyCode: "USD",
+      },
+    },
+  },
+];
+
+// Cache for search results
+const searchCache = new Map<string, any>();
 
 export const searchBooks = async ({
   keywords,
   searchIndex = "Books",
-  itemCount = 10,
+  itemCount = 20, // Reduced from 40 to 20
+  startIndex = 0,
 }: BookSearchParams) => {
   try {
-    console.log(
-      "Making API request to:",
-      `${API_URL}/api/search?query=${encodeURIComponent(keywords)}`
-    );
-    const response = await fetch(
-      `${API_URL}/api/search?query=${encodeURIComponent(keywords)}`,
+    const cacheKey = `${keywords}-${startIndex}-${itemCount}`;
+
+    // Check cache first
+    if (searchCache.has(cacheKey)) {
+      return searchCache.get(cacheKey);
+    }
+
+    // Optimize search query
+    const optimizedQuery = keywords
+      .toLowerCase()
+      .replace(/\s+/g, " ") // Remove extra spaces
+      .trim();
+
+    console.log("Making API request to Google Books API");
+    const googleResponse = await fetch(
+      `${GOOGLE_BOOKS_API}?q=${encodeURIComponent(
+        optimizedQuery
+      )}&maxResults=${itemCount}&startIndex=${startIndex}&key=${
+        process.env.REACT_APP_GOOGLE_BOOKS_API_KEY
+      }`,
       {
         method: "GET",
         headers: {
@@ -74,40 +131,88 @@ export const searchBooks = async ({
       }
     );
 
-    if (!response.ok) {
-      console.warn("API request failed, using fallback data");
+    if (!googleResponse.ok) {
+      console.warn("Google Books API request failed, using fallback data");
       return FALLBACK_BOOKS;
     }
 
-    const data = await response.json();
-    console.log("Amazon API Response:", data);
+    const googleData = await googleResponse.json();
 
-    if (!data.SearchResult?.Items) {
-      console.warn("No items found in response, using fallback data");
+    if (!googleData.items || googleData.items.length === 0) {
+      console.warn(
+        "No items found in Google Books response, using fallback data"
+      );
       return FALLBACK_BOOKS;
     }
 
-    const items = data.SearchResult.Items.map((item: any) => {
-      const amazonUrl = `https://www.amazon.com/dp/${item.ASIN}/?tag=${process.env.REACT_APP_AMAZON_ASSOCIATE_TAG}&linkCode=as2&camp=1789&creative=9325`;
-      console.log("Generated Amazon URL:", amazonUrl);
+    const processedResults = googleData.items.map((item: any) => ({
+      id: item.id,
+      title: item.volumeInfo.title,
+      author: item.volumeInfo.authors?.[0] || "Unknown Author",
+      description: item.volumeInfo.description || "",
+      imageUrl:
+        item.volumeInfo.imageLinks?.thumbnail ||
+        "https://via.placeholder.com/150",
+      previewLink: item.volumeInfo.previewLink,
+      price: item.saleInfo?.listPrice
+        ? `$${item.saleInfo.listPrice.amount}`
+        : "Price not available",
+      publishedDate: item.volumeInfo.publishedDate,
+      pageCount: item.volumeInfo.pageCount,
+      categories: item.volumeInfo.categories || [],
+      language: item.volumeInfo.language,
+      publisher: item.volumeInfo.publisher,
+      averageRating: item.volumeInfo.averageRating,
+      ratingsCount: item.volumeInfo.ratingsCount,
+      isbn: item.volumeInfo.industryIdentifiers?.find(
+        (id: any) => id.type === "ISBN_13" || id.type === "ISBN_10"
+      )?.identifier,
+      amazonLink: item.volumeInfo.industryIdentifiers?.find(
+        (id: any) => id.type === "ISBN_13" || id.type === "ISBN_10"
+      )?.identifier
+        ? `https://www.amazon.com/s?k=${
+            item.volumeInfo.industryIdentifiers.find(
+              (id: any) => id.type === "ISBN_13" || id.type === "ISBN_10"
+            ).identifier
+          }&tag=${process.env.REACT_APP_AMAZON_ASSOCIATE_TAG}`
+        : `https://www.amazon.com/s?k=${encodeURIComponent(
+            item.volumeInfo.title
+          )}&tag=${process.env.REACT_APP_AMAZON_ASSOCIATE_TAG}`,
+      subtitle: item.volumeInfo.subtitle,
+      industryIdentifiers: item.volumeInfo.industryIdentifiers,
+      maturityRating: item.volumeInfo.maturityRating,
+      printType: item.volumeInfo.printType,
+      contentVersion: item.volumeInfo.contentVersion,
+      panelizationSummary: item.volumeInfo.panelizationSummary,
+      readingModes: item.volumeInfo.readingModes,
+      canonicalVolumeLink: item.volumeInfo.canonicalVolumeLink,
+      infoLink: item.volumeInfo.infoLink,
+      searchInfo: item.searchInfo?.textSnippet,
+    }));
 
-      return {
-        id: item.ASIN,
-        title: item.ItemInfo.Title.DisplayValue,
-        author:
-          item.ItemInfo.ByLineInfo?.Authors?.[0]?.DisplayValue ||
-          "Unknown Author",
-        imageUrl: item.Images.Primary.Medium.URL,
-        price:
-          item.Offers?.Listings?.[0]?.Price?.DisplayAmount ||
-          "Price not available",
-        amazonUrl,
-      };
-    });
+    // Cache the results
+    searchCache.set(cacheKey, processedResults);
 
-    return items;
+    // Clear old cache entries after 5 minutes
+    setTimeout(() => {
+      searchCache.delete(cacheKey);
+    }, 5 * 60 * 1000);
+
+    return processedResults;
   } catch (error) {
     console.error("Error searching books, using fallback data:", error);
     return FALLBACK_BOOKS;
   }
 };
+
+// Commented out: AmazonBook, AmazonSearchParams, searchAmazonBooks, generateAmazonSignature, and all Amazon API logic below.
+// Only Google Books API and fallback remain active.
+// export const searchAmazonBooks = async ({
+//   keywords,
+//   searchIndex = "Books",
+//   itemCount = 40,
+//   startIndex = 0,
+// }: AmazonSearchParams): Promise<AmazonBook[]> => {
+//   // Amazon API disabled for now
+//   return [];
+// };
